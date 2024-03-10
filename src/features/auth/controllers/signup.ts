@@ -4,19 +4,15 @@ import { joiValidation } from '@global/decorators/joi-validation.decorators';
 import { signupSchema } from '@auth/schemes/signup';
 import { IAuthDocument, ISignUpData } from '@auth/interfaces/auth.interface';
 import { authService } from '@service/db/auth.service';
-import { Helpers } from '@global/helpers/helpers';
-import { UploadApiResponse } from 'cloudinary';
-import { uploads } from '@global/helpers/cloudinary-upload';
-import HTTP_STATUS from 'http-status-codes';
-import { IUserDocument } from '@user/interfaces/user.interface';
-import { UserCache } from '@service/redis/user.cache';
-import JWT from 'jsonwebtoken';
-import { authQueue } from '@service/queues/auth.queue';
-import { userQueue } from '@service/queues/user.queue';
-import { config } from '@root/config';
 import { BadRequestError } from '@global/helpers/error-handler';
+import { uploads } from '@global/helpers/cloudinary-upload';
+import { UploadApiResponse } from 'cloudinary';
+import HTTP_STATUS from 'http-status-codes';
+import { Helpers } from '@global/helpers/helpers';
+import { IUserDocument } from '@user/interfaces/user.interface';
+// import { UserCache } from '@service/redis/user.cache';
 
-const userCache: UserCache = new UserCache();
+// const userCache: UserCache = new UserCache();
 
 export class SignUp {
   @joiValidation(signupSchema)
@@ -30,9 +26,6 @@ export class SignUp {
     const authObjectId: ObjectId = new ObjectId();
     const userObjectId: ObjectId = new ObjectId();
     const uId = `${Helpers.generateRandomIntegers(12)}`;
-    // the reason we are using SignUp.prototype.signupData and not this.signupData is because
-    // of how we invoke the create method in the routes method.
-    // the scope of the this object is not kept when the method is invoked
     const authData: IAuthDocument = SignUp.prototype.signupData({
       _id: authObjectId,
       uId,
@@ -47,30 +40,12 @@ export class SignUp {
     }
 
     // Add to redis cache
-    const userDataForCache: IUserDocument = SignUp.prototype.userData(authData, userObjectId);
-    userDataForCache.profilePicture = `https://res.cloudinary.com/dyamr9ym3/image/upload/v${result.version}/${userObjectId}`;
-    await userCache.saveUserToCache(`${userObjectId}`, uId, userDataForCache);
+    // const userDataForCache: IUserDocument = SignUp.prototype.userData(authData, userObjectId);
+    // userDataForCache.profilePicture = `https://res.cloudinary.com/dyamr9ym3/image/upload/v${result.version}/${userObjectId}`;
+    // await userCache.saveUserToCache(`${userObjectId}`, uId, userDataForCache);
 
-    // Add to database
-    authQueue.addAuthUserJob('addAuthUserToDB', { value: authData });
-    userQueue.addUserJob('addUserToDB', { value: userDataForCache });
+    res.status(HTTP_STATUS.CREATED).json({ message: 'User created successfully', authData });
 
-    const userJwt: string = SignUp.prototype.signToken(authData, userObjectId);
-    req.session = { jwt: userJwt };
-    res.status(HTTP_STATUS.CREATED).json({ message: 'User created successfully', user: userDataForCache, token: userJwt });
-  }
-
-  private signToken(data: IAuthDocument, userObjectId: ObjectId): string {
-    return JWT.sign(
-      {
-        userId: userObjectId,
-        uId: data.uId,
-        email: data.email,
-        username: data.username,
-        avatarColor: data.avatarColor
-      },
-      config.JWT_TOKEN!
-    );
   }
 
   private signupData(data: ISignUpData): IAuthDocument {

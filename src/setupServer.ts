@@ -6,13 +6,13 @@ import hpp from 'hpp';
 import compression from 'compression';
 import cookieSession from 'cookie-session';
 import HTTP_STATUS from 'http-status-codes';
-import { config } from './config';
+import { config } from '@root/config';
 import { Server } from 'socket.io';
 import { createClient } from 'redis';
 import { createAdapter } from '@socket.io/redis-adapter';
-import applicationRoutes from './routes';
 import { CustomError, IErrorResponse } from './shared/globals/helpers/error-handler';
 import Logger from 'bunyan';
+import applicationRoutes from '@root/routes';
 
 const SERVER_PORT = 6000;
 const log: Logger = config.createLogger('server');
@@ -23,6 +23,7 @@ export class ChattyServer {
     this.app = app;
   }
   public start(): void {
+    console.log(config);
     this.securityMiddleware(this.app);
     this.standardMiddleware(this.app);
     this.routesMiddleware(this.app);
@@ -87,10 +88,10 @@ export class ChattyServer {
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
       }
     });
-    const pubClient = createClient({ url: config.REDIS_HOST });
-    const subClient = pubClient.duplicate();
-    await Promise.all([pubClient.connect(), subClient.connect()]);
-    io.adapter(createAdapter(pubClient, subClient));
+    // const pubClient = createClient({ url: config.REDIS_HOST });
+    // const subClient = pubClient.duplicate();
+    // await Promise.all([pubClient.connect(), subClient.connect()]);
+    // io.adapter(createAdapter(pubClient, subClient));
     return io;
   }
   private startHttpServer(httpServer: http.Server): void {
