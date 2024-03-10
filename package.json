@@ -17,6 +17,7 @@
   "license": "ISC",
   "dependencies": {
     "@bull-board/express": "^5.14.2",
+    "@bull-board/ui": "^5.14.2",
     "@socket.io/redis-adapter": "^8.2.1",
     "bcryptjs": "^2.4.3",
     "bull": "^4.12.2",

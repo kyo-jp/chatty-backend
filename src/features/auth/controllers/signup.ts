@@ -10,9 +10,12 @@ import { UploadApiResponse } from 'cloudinary';
 import HTTP_STATUS from 'http-status-codes';
 import { Helpers } from '@global/helpers/helpers';
 import { IUserDocument } from '@user/interfaces/user.interface';
-// import { UserCache } from '@service/redis/user.cache';
+import { UserCache } from '@service/redis/user.cache';
+import { omit } from 'lodash';
+import { authQueue } from '@service/queues/auth.queue';
+import { userQueue } from '@service/queues/user.queue';
 
-// const userCache: UserCache = new UserCache();
+const userCache: UserCache = new UserCache();
 
 export class SignUp {
   @joiValidation(signupSchema)
@@ -40,9 +43,14 @@ export class SignUp {
     }
 
     // Add to redis cache
-    // const userDataForCache: IUserDocument = SignUp.prototype.userData(authData, userObjectId);
-    // userDataForCache.profilePicture = `https://res.cloudinary.com/dyamr9ym3/image/upload/v${result.version}/${userObjectId}`;
-    // await userCache.saveUserToCache(`${userObjectId}`, uId, userDataForCache);
+    const userDataForCache: IUserDocument = SignUp.prototype.userData(authData, userObjectId);
+    userDataForCache.profilePicture = `https://res.cloudinary.com/dj2konste/image/upload/v${result.version}/${userObjectId}`;
+    await userCache.saveUserToCache(`${userObjectId}`, uId, userDataForCache);
+
+    // Add to database
+    omit(userDataForCache, ['uId', 'username', 'email', 'avatarColor', 'password']);
+    authQueue.addAuthUserJob('addAuthUserToDB', {value: userDataForCache});
+    userQueue.addUserJob('addUserToDB', { value: userDataForCache });
 
     res.status(HTTP_STATUS.CREATED).json({ message: 'User created successfully', authData });
 
