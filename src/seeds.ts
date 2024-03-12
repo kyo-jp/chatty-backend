@@ -57,7 +57,9 @@ async function seedUserData(count: number): Promise<void> {
   let i = 0;
   try {
     for (i = 0; i < count; i++) {
-      const username: string = (faker as any).unique(faker.word.adjective, [8]);
+      console.log('i', i);
+      const username: string = faker.internet.userName();
+      console.log('username', username);
       const color = avatarColor();
       const avatar = generateAvatar(username.charAt(0).toUpperCase(), color);
 
