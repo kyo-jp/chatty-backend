@@ -45,7 +45,7 @@ Accept: application/json
 withCredentials: true
 
 {
-  "email": ""
+  "email": "kyo@mirror-mii.com"
 }
 
 ###

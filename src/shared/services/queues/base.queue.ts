@@ -5,11 +5,30 @@ import { ExpressAdapter } from '@bull-board/express';
 import {BullAdapter} from '@bull-board/api/bullAdapter';
 import { config } from '@root/config';
 import { IAuthJob } from '@auth/interfaces/auth.interface';
+import { IEmailJob, IUserJob } from '@user/interfaces/user.interface';
+import { IPostJobData } from '@post/interfaces/post.interface';
+import { IReactionJob } from '@reaction/interfaces/reaction.interface';
+import { ICommentJob } from '@comment/interfaces/comment.interface';
+import { IBlockedUserJobData, IFollowerJobData } from '@follower/interfaces/follower.interface';
+import { INotificationJobData } from '@notification/interfaces/notification.interface';
+import { IFileImageJobData } from '@image/interfaces/image.interface';
+import { IChatJobData, IMessageData } from '@chat/interfaces/chat.interface';
 
 type IBaseJobData =
   | IAuthJob
+  | IEmailJob
+  | IPostJobData
+  | IReactionJob
+  | ICommentJob
+  | IFollowerJobData
+  | IBlockedUserJobData
+  | INotificationJobData
+  | IFileImageJobData
+  | IChatJobData
+  | IMessageData
+  | IUserJob;
 
-  let bullAdapters: BullAdapter[] = [];
+let bullAdapters: BullAdapter[] = [];
 export let serverAdapter: ExpressAdapter;
 
 export abstract class BaseQueue {
@@ -42,8 +61,9 @@ export abstract class BaseQueue {
       this.log.info(`Job ${jobId} is stalled`);
     });
   }
+
   protected addJob(name: string, data: IBaseJobData): void {
-    this.queue.add(name, data, { attempts: 3, backoff: { type: 'fixed', delay: 5000 } });
+    this.queue.add(name, data, { attempts: 3, backoff: { type: 'fixed', delay: 6000 } });
   }
 
   protected processJob(name: string, concurrency: number, callback: Queue.ProcessCallbackFunction<void>): void {
