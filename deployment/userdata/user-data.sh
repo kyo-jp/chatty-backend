@@ -11,14 +11,18 @@ sudo yum update -y
 sudo yum install ruby -y
 sudo yum install wget -y
 cd /home/ec2-user
-wget https://aws-codedeploy-eu-central-1.s3.eu-central-1.amazonaws.com/latest/install
+wget https://aws-codedeploy-us-east-1.s3.us-east-1.amazonaws.com/latest/install
 sudo chmod +x ./install
 sudo ./install auto
 
 # Check if NodeJs is installed. If not, install it
 if [ $(program_is_installed node) == 0 ]; then
   curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo bash -
-  sudo yum install -y nodejs
+  # sudo yum install -y nodejs
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+  source ~/.bashrc
+  nvm install 16.20.2
+  nvm use 16.20.2
 fi
 
 if [ $(program_is_installed git) == 0 ]; then
